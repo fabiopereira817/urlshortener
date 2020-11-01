@@ -1,6 +1,6 @@
 package controllers
 
-import dto.{ShortUrlRequest, ShortUrlResponse}
+import dto.ShortUrlRequest
 import javax.inject._
 import play.api.libs.json.{JsError, JsValue, Json}
 import play.api.mvc._
@@ -17,8 +17,8 @@ class UrlShortenerController @Inject()(cc: ControllerComponents, urlShortenerSer
         BadRequest(Json.obj("message" -> JsError.toJson(errors)))
       },
       shortUrlRequest => {
-        val shortUrl = urlShortenerService.createShortUrl(shortUrlRequest.url, shortUrlRequest.ttl)
-        Ok(Json.toJson(ShortUrlResponse(shortUrlRequest.url, shortUrl, shortUrlRequest.ttl)))
+        val shortUrlResponse = urlShortenerService.createShortUrl(shortUrlRequest.url, shortUrlRequest.ttl)
+        Ok(Json.toJson(shortUrlResponse))
       }
     )
   }
