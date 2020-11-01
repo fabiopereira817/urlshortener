@@ -1,7 +1,8 @@
 package integration
 
+import com.dimafeng.testcontainers.{ForAllTestContainer, GenericContainer}
 import dao.UrlStorage
-import dao.implementations.InMemoryUrlStorage
+import dao.implementations.RedisUrlStorage
 import dto.{ShortUrlRequest, ShortUrlResponse}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -13,12 +14,14 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class UrlShortenerControllerTest extends PlaySpec with GuiceOneAppPerSuite {
+class AppWithRedisStorageITest extends PlaySpec with GuiceOneAppPerSuite with ForAllTestContainer {
+
+  override val container: GenericContainer = GenericContainer("redis:latest", exposedPorts = Seq(6379))
 
   "UrlShortenerController" should {
 
     "saveUrl in storage" in {
-      val storage = new InMemoryUrlStorage()
+      val storage = new RedisUrlStorage("localhost", container.container.getMappedPort(6379))
 
       val myApp = new GuiceApplicationBuilder()
         .overrides(bind[UrlStorage].toInstance(storage))
@@ -43,7 +46,7 @@ class UrlShortenerControllerTest extends PlaySpec with GuiceOneAppPerSuite {
 
     "getOriginalUrl should return 404 when url not found" in {
       val myApp = new GuiceApplicationBuilder()
-        .overrides(bind[UrlStorage].toInstance(new InMemoryUrlStorage()))
+        .overrides(bind[UrlStorage].toInstance(new RedisUrlStorage("localhost", container.container.getMappedPort(6379))))
         .build()
 
       val getRequest = route(myApp, FakeRequest(GET, "/invalidUrl")).get
@@ -53,7 +56,7 @@ class UrlShortenerControllerTest extends PlaySpec with GuiceOneAppPerSuite {
     }
 
     "getOriginalUrl should return a redirect to a valid url" in {
-      val storage = new InMemoryUrlStorage()
+      val storage = new RedisUrlStorage("localhost", container.container.getMappedPort(6379))
       storage.save("http://www.google.com", "abcd", 1)
 
       val myApp = new GuiceApplicationBuilder()
