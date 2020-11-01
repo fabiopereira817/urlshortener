@@ -25,7 +25,7 @@ class UrlShortenerController @Inject()(cc: ControllerComponents, urlShortenerSer
 
   def getOriginalUrl(shortUrl: String): Action[AnyContent] = Action { _ =>
     urlShortenerService.retrieveOriginalUrl(shortUrl) match {
-      case Some(url) => Redirect(url)
+      case Some(url) => Redirect(url, statusCode = MOVED_PERMANENTLY)
       case None => NotFound("Url not found")
     }
   }
